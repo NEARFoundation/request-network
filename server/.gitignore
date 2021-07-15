@@ -10,8 +10,7 @@
 /dist
 
 # keys
-/neardev/dev-account*
-/neardev/*/test-account*
+/neardev
 
 # testing
 /coverage

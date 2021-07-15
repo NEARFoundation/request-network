@@ -1,0 +1,235 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  --bg: #fff;
+  --fg: #25282A;
+  --gray: #888;
+  --gray2: #555;
+  --royal: #0072CE;
+  --blue: #6AD1E3;
+  --primary: #D1CCBD;
+  --secondary: var(--royal);
+  --tertiary: #FF585D;
+  --shadow: #e6e6e6;
+  --success: rgb(90, 206, 132);
+  --failure: #FF585D;
+  --error: #ff282d;
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  font-size: calc(.65em + 0.7vw);
+  line-height: 1.3;
+
+  ::selection {
+    background: var(--secondary);
+    color: var(--bg);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    --bg: #25282A;
+    --fg: #fff;
+    --secondary: var(--blue);
+
+    ::selection {
+      background: var(--secondary);
+      color: var(--fg);
+    }
+  }
+}
+
+body {
+  margin: 0 auto;
+  padding: 0 1em;
+  max-width: 40em;
+}
+
+fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.highlight {
+  align-items: center;
+  display: flex;
+  margin-bottom: 0.5em;
+  width: 100%;
+  label {
+    margin-right: 0.5em;
+  }
+  input {
+    caret-color: var(--secondary);
+  }
+}
+
+label {
+  color: var(--gray);
+}
+
+button, .highlight {
+  border-radius: 5px;
+  border-color: var(--primary);
+  border: 0.1em solid var(--primary);
+  padding: 0.5em 1em;
+
+  &:hover, &:focus, &:focus-within {
+    border-color: var(--secondary);
+  }
+}
+
+input {
+  border: none;
+  flex: 1;
+  &:read-only {
+    color: var(--primary)
+  }
+}
+
+input[type="number"] {
+  text-align: center;
+  border-bottom: 0.1em solid var(--primary);
+  margin: 0 1em;
+  width: 6em;
+  padding-left: 0.5em;
+  &:hover, &:focus {
+    border-color: var(--secondary);
+  }
+}
+
+button, input {
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  outline: none;
+}
+
+button {
+  position: relative;
+  transition: top 50ms;
+  &:hover, &:focus {
+    top: -1px;
+  }
+  &:active {
+    background: var(--secondary);
+    border-color: var(--secondary);
+    top: 1px;
+  }
+  &[type="submit"] {
+    background: var(--secondary);
+    color: #efefef;
+  }
+}
+
+aside {
+  animation: notify ease-in-out 10s;
+  background-color: var(--shadow);
+  border-radius: 5px;
+  bottom: 0;
+  font-size: 0.8em;
+  margin: 1em;
+  padding: 1em;
+  position: fixed;
+  transform: translateY(10em);
+  right: 0;
+  & p.failure {
+    color: var(--error);
+  }
+  footer {
+    display: flex;
+    font-size: 0.9em;
+    justify-content: space-between;
+    margin-top: 0.5em;
+    & *:first-child {
+      color: var(--success);
+    }
+    & div.failure {
+      color: var(--failure);
+    }
+    & *:last-child {
+      color: var(--gray2);
+    }
+  }
+}
+@keyframes notify {
+  0% { transform: translateY(10em) }
+  5% { transform: translateY(0) }
+  95% { transform: translateY(0) }
+  100% { transform: translateY(10em) }
+}
+
+table {
+  font: inherit;
+  border-spacing: 0;
+  border-radius: 5px;
+  border-top: 0.1em solid var(--primary);
+  border-left: 0.1em solid var(--primary);
+
+  &.transactions {
+    width: 100%;
+    th {
+      &.column-tx-hash {
+        width: 16%;
+      }
+      &.column-payer {
+        width: 32%;
+      }
+      &.column-payee {
+        width: 32%;
+      }
+      &.column-amount {
+        width: 20%;
+      }
+      &.column-param-name {
+        width: 40%;
+      }
+      &.column-param-value {
+        width: 60%;
+      }
+    }
+
+    tr {
+      td {
+        text-align: center;
+
+        &.column-amount, &.column-param-name {
+          text-align: right;
+        }
+        &.column-param-value {
+          text-align: left;
+        }
+      }
+    }
+
+    & tr:nth-child(odd) > td {
+      background: #f9f9f9;
+    }
+
+    tbody > tr:hover > td,
+    tbody > tr:hover > th {
+      background-color: whitesmoke;
+    }
+  }
+
+  tr {
+    :last-child {
+      td {
+        border-bottom: 0;
+      }
+    }
+  }
+
+  th,
+  td {
+    margin: 0;
+    padding: 0.5em;
+    border-bottom: 0.1em solid var(--primary);
+    border-right: 0.1em solid var(--primary);
+
+    :last-child {
+      border-right: 0;
+    }
+  }
+}

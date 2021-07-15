@@ -1,0 +1,8 @@
+{
+    "watch": [
+      "./app.js",
+      "./model/indexer_repository.js",
+      "../src/near-utility-server.config.js"
+    ],
+    "verbose": true
+}
