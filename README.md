@@ -3,7 +3,7 @@ Request-network
 
 This example demonstrates payments using NEAR tokens and viewing the transaction log with a RequestProxy smart contract deployed in NEAR.
 
-Demo: ...
+Demo: https://nicepay.beskyd.com:8080/
 
 Quick Start
 ===========
@@ -29,7 +29,10 @@ Exploring The Code
 2. The frontend code lives in the `/src` folder. `/src/index.html` is a great
    place to start exploring. Note that it loads in `/src/index.js`, where you
    can learn how the frontend connects to the NEAR blockchain.
-3. Tests: there are different kinds of tests for the frontend and the smart
+3. The utility server that provides transaction log data from the NEAR blockchain
+   lives in the /server folder. The utility server uses a public NEAR Indexer
+   database  (see: [NEAR Indexer for Explorer]).
+4. Tests: there are different kinds of tests for the frontend and the smart
    contract. See `contract/README` for info about how it's tested. The frontend
    code gets tested with [jest]. You can run both of these at once with `yarn
    run test`.
@@ -88,6 +91,33 @@ As you can see in `package.json`, this does two things:
 2. builds & deploys frontend code to GitHub using [gh-pages]. This will only work if the project already has a repository set up on GitHub. Feel free to modify the `deploy` script in `package.json` to deploy elsewhere.
 
 
+Docker Deploys 
+==============
+
+Using Docker to deploy your app has several benefits:
+
+1. Your dockerized app can be spun up reliably using the same commands on any platform with a Docker Daemon -- namely, Linux (CentOS, Debian, Fedora, Ubuntu), macOS, and Windows.
+2. This technology allows you to work in a single Docker container - a server that provides a user interface and a utility server.
+3. It is easy to test your app's ability to scale horizontally, even locally on your development machine.
+
+##The sequence of creating a container:
+
+Preload
+
+    cd docker
+    ./prepare.sh
+
+Build Docker image
+
+    ./build.sh
+
+docker/Dockerfile - contains all the commands a user could call on the command line to assemble an image.
+
+Run a new container
+
+    ./run_server.sh
+
+
 Troubleshooting
 ===============
 
@@ -102,3 +132,4 @@ On Windows, if you're seeing an error containing `EPERM` it may be related to sp
   [NEAR Wallet]: https://wallet.testnet.near.org/
   [near-cli]: https://github.com/near/near-cli
   [gh-pages]: https://github.com/tschaub/gh-pages
+  [NEAR Indexer for Explorer]: https://github.com/near/near-indexer-for-explorer

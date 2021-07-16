@@ -71,5 +71,6 @@ export async function isValidAccountId(account) {
 }
 
 export async function getTransactionsFromIndexer() {
-  return await fetch(serverConfig.serverUrl + '/transactions-from-indexer').then((res) => res.json())
+  return await fetch(`${window.location.protocol}//${window.location.hostname}:${serverConfig.serverPort}` +
+    '/transactions-from-indexer').then((res) => res.json())
 }

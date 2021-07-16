@@ -5,7 +5,7 @@
   "scripts": {
     "build": "yarn build:contract && yarn build:web",
     "build:contract": "(cd contract && ./build.sh)",
-    "build:web": "parcel build src/index.html --public-url ./",
+    "build:web": "rm -rf dist && parcel build src/index.html --public-url ./",
     "dev:deploy:contract": "near dev-deploy",
     "deploy:contract": "near deploy",
     "start:server": "(cd server && yarn start)",

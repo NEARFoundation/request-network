@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const cron = require('node-cron')
+require('dotenv').config()
 const getTransactionsFromNearIndexerDatabase = require('./model/near_indexer_repository')
 const getServerConfig = require('../src/near-utility-server.config')
 const serverConfig = getServerConfig(process.env.NODE_ENV || 'development')
@@ -25,8 +26,6 @@ cron.schedule('*/1 * * * *', () =>  {
 }, { scheduled: true })
 
 const app = express()
-const port = 3000
-
 app.use(cors())
 app.use(express.json())
 
@@ -62,6 +61,6 @@ app.get('/one-transaction-from-indexer', async (req, res) => {
     }
 })
 
-app.listen(port, () => {
-    console.log(`\nLocal Server\nListening at http://localhost:${port}`)
+app.listen(serverConfig.serverPort, () => {
+    console.log(`\nLocal Server\nListening at http://localhost:${serverConfig.serverPort}`)
 })

@@ -1,10 +1,12 @@
+const UTILITY_SERVER_PORT = process.env.UTILITY_SERVER_PORT || 3000
+
 function getServerConfig(env) {
   let config = {
-    serverUrl: "http://localhost:3000",
+    serverPort: UTILITY_SERVER_PORT,
     //Maximum search depth in the last blocks
     maxSearchDepthInBlocks: 1e8,
     //The maximum number of lines of the result
-    limitLinesOfResult: 100,
+    limitLinesOfResult: 100
   }
 
   // Public NEAR Indexer database (see: https://github.com/near/near-indexer-for-explorer)
