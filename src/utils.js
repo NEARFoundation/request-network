@@ -1,6 +1,7 @@
 import { connect, Contract, keyStores, WalletConnection } from 'near-api-js'
 import { ethers } from 'ethers'
 import md5 from 'crypto-js/md5'
+import * as autobahn from 'autobahn-browser/autobahn'
 import getConfig from './config'
 import getServerConfig from '../src/near-utility-server.config'
 
@@ -22,7 +23,7 @@ export async function initContract() {
     window.currentUser = {
       accountId: walletConnection.getAccountId(),
       balance: (await walletConnection.account().state()).amount
-    };
+    }
   }
 
   // Initializing our contract APIs by contract name and configuration
@@ -62,7 +63,7 @@ export function defaultSalt() {
 export async function isValidAccountId(account) {
   const near = window.walletConnection._near
   try {
-    await near.connection.provider.query(`account/${account}`, "");
+    await near.connection.provider.query(`account/${account}`, "")
     return true
   } catch (e) {
     console.log(e.stack)
@@ -73,4 +74,95 @@ export async function isValidAccountId(account) {
 export async function getTransactionsFromIndexer() {
   return await fetch(`${window.location.protocol}//${window.location.hostname}:${serverConfig.serverPort}` +
     '/transactions-from-indexer').then((res) => res.json())
+}
+
+export async function storeTransactions() {
+  const query = `SELECT t.transaction_hash,
+       b.block_hash,
+       t.block_timestamp,
+       t.signer_account_id as payer,
+       r.receiver_account_id as payee,
+       COALESCE(a.args::json->>'deposit', '') as deposit,
+       COALESCE(a.args::json->>'method_name', '') as method_name,
+       COALESCE((a.args::json->'args_json')::json->>'to', '') as "to",
+       COALESCE((a.args::json->'args_json')::json->>'amount', '') as amount,
+       COALESCE((a.args::json->'args_json')::json->>'payment_reference', '') as payment_reference
+FROM transactions t,
+     receipts r,
+     blocks b,
+     transaction_actions a,
+     action_receipt_actions ra,
+     execution_outcomes e
+WHERE t.transaction_hash = r.originated_from_transaction_hash
+  AND r.receipt_id = e.receipt_id
+  AND b.block_timestamp = r.included_in_block_timestamp
+  AND ra.receipt_id = r.receipt_id
+  AND ra.action_kind = 'TRANSFER'
+  AND t.transaction_hash = a.transaction_hash
+  AND a.action_kind = 'FUNCTION_CALL'
+  AND e.status = 'SUCCESS_VALUE'
+  AND r.predecessor_account_id != 'system'
+  AND t.receiver_account_id = :contract_name
+  AND b.block_height >=
+      (select block_height from blocks order by block_height desc limit 1) - :depth
+ORDER BY b.block_height DESC
+LIMIT :limit`
+  const procedure = serverConfig.remoteProcedureName
+
+  try {
+    const connection = new autobahn.Connection({
+      url: serverConfig.nearWebSocketUrl,
+      realm: "near-explorer",
+      retry_if_unreachable: true,
+      max_retries: 5,
+      max_retry_delay: 10
+    })
+    connection.onopen = async session => {
+      const transactions = await session.call(procedure, [query, {
+        contract_name: nearConfig.contractName,
+        depth: serverConfig.maxSearchDepthInBlocks,
+        limit: serverConfig.limitLinesOfResult
+      }]).then(data => {
+          console.log(`Returned rows ${data.length}`)
+          return data
+        }
+      ).catch((e) => {
+        console.log(e)
+      })
+      if (transactions && transactions.length > 0) {
+        localStorage.setItem('nearTransactions', JSON.stringify(transactions))
+      } else {
+        console.log('Most likely an error occurred, no transactions')
+        localStorage.setItem('nearTransactions', "[]")
+      }
+      setStateInitializedTransactionStore()
+    }
+    connection.onclose = reason => {
+      console.log(`Connection close: ${reason}`)
+    }
+    connection.open()
+  } catch (err) {
+    console.log(`Error retrieving data: ${err.message}\n${err.stack}`)
+  }
+}
+
+export function getIndexerTransactionsFromBrowserStorage() {
+  let transactions= [];
+  if (localStorage.getItem('nearTransactions')) {
+    transactions = JSON.parse(localStorage.getItem('nearTransactions'));
+  }
+  return transactions;
+}
+
+export function setStateNotInitializedTransactionStore() {
+  localStorage.removeItem("initializedTransactionStore")
+  localStorage.removeItem("nearTransactions")
+}
+
+export function hasInitializedTransactionStore() {
+  return localStorage.getItem('initializedTransactionStore')
+}
+
+function setStateInitializedTransactionStore() {
+  localStorage.setItem("initializedTransactionStore", "1")
 }

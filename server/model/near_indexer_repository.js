@@ -27,6 +27,7 @@ WHERE t.transaction_hash = r.originated_from_transaction_hash
   AND r.receipt_id = e.receipt_id
   AND b.block_timestamp = r.included_in_block_timestamp
   AND ra.receipt_id = r.receipt_id
+  AND ra.action_kind = 'TRANSFER'
   AND t.transaction_hash = a.transaction_hash
   AND a.action_kind = 'FUNCTION_CALL'
   AND e.status = 'SUCCESS_VALUE'

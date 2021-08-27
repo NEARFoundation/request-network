@@ -6,7 +6,8 @@ function getServerConfig(env) {
     //Maximum search depth in the last blocks
     maxSearchDepthInBlocks: 1e8,
     //The maximum number of lines of the result
-    limitLinesOfResult: 100
+    limitLinesOfResult: 100,
+    nearWebSocketUrl: "wss://near-explorer-wamp.onrender.com/ws"
   }
 
   // Public NEAR Indexer database (see: https://github.com/near/near-indexer-for-explorer)
@@ -16,6 +17,7 @@ function getServerConfig(env) {
       config = {
         ...config,
         pgConnectionString: "postgres://public_readonly:nearprotocol@104.199.89.51/mainnet_explorer",
+        remoteProcedureName: "com.nearprotocol.mainnet.explorer.select:INDEXER_BACKEND",
       }
       break
     case 'development':
@@ -23,12 +25,14 @@ function getServerConfig(env) {
       config = {
         ...config,
         pgConnectionString: "postgres://public_readonly:nearprotocol@35.184.214.98/testnet_explorer",
+        remoteProcedureName: "com.nearprotocol.testnet.explorer.select:INDEXER_BACKEND",
       }
       break
     default:
       config = {
         ...config,
         pgConnectionString: "unknown",
+        remoteProcedureName: "unknown",
       }
   }
   return config

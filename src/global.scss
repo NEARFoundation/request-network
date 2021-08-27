@@ -57,6 +57,7 @@ fieldset {
   margin-bottom: 0.5em;
   width: 100%;
   label {
+    color: var(--gray);
     margin-right: 0.5em;
   }
   input {
@@ -64,8 +65,13 @@ fieldset {
   }
 }
 
-label {
+p.empty-content {
   color: var(--gray);
+  text-align: center;
+}
+
+label {
+  color: var(--fg);
 }
 
 button, .highlight {
@@ -204,12 +210,12 @@ table {
     }
 
     & tr:nth-child(odd) > td {
-      background: #f9f9f9;
+      background: var(--shadow);
     }
 
     tbody > tr:hover > td,
     tbody > tr:hover > th {
-      background-color: whitesmoke;
+      background-color: var(--primary);
     }
   }
 
@@ -231,5 +237,11 @@ table {
     :last-child {
       border-right: 0;
     }
+  }
+}
+
+.selectSource {
+  input[type="radio"] {
+    margin-left: 1em;
   }
 }

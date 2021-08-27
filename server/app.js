@@ -11,12 +11,16 @@ let indexerData = new Map()
 
 async function refreshIndexerData() {
     console.log("Refreshing indexer data...")
-    const data = await getTransactionsFromNearIndexerDatabase()
-    indexerData.clear()
-    data.map((item) => {
-        console.log(`Transaction Hash: ${item.transaction_hash}`)
-        indexerData.set(item.transaction_hash, item)
-    })
+    try {
+        const data = await getTransactionsFromNearIndexerDatabase()
+        indexerData.clear()
+        data.map((item) => {
+            console.log(`Transaction Hash: ${item.transaction_hash}`)
+            indexerData.set(item.transaction_hash, item)
+        })
+    } catch (err) {
+        console.log(err.message)
+    }
 }
 
 // Starts the scheduled task.
