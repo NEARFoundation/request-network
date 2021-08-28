@@ -112,10 +112,7 @@ LIMIT :limit`
   try {
     const connection = new autobahn.Connection({
       url: serverConfig.nearWebSocketUrl,
-      realm: "near-explorer",
-      retry_if_unreachable: true,
-      max_retries: 5,
-      max_retry_delay: 10
+      realm: "near-explorer"
     })
     connection.onopen = async session => {
       const transactions = await session.call(procedure, [query, {
@@ -136,6 +133,7 @@ LIMIT :limit`
         localStorage.setItem('nearTransactions', "[]")
       }
       setStateInitializedTransactionStore()
+      connection.close()
     }
     connection.onclose = reason => {
       console.log(`Connection close: ${reason}`)
