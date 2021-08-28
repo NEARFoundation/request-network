@@ -156,7 +156,7 @@ export function getIndexerTransactionsFromBrowserStorage() {
 
 export function setStateNotInitializedTransactionStore() {
   localStorage.removeItem("initializedTransactionStore")
-  localStorage.removeItem("nearTransactions")
+  //localStorage.removeItem("nearTransactions")
 }
 
 export function hasInitializedTransactionStore() {

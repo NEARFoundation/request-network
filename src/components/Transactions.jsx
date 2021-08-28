@@ -103,6 +103,7 @@ export default function Transactions({onBack}) {
     setTableItems([])
     if (mode === 1) {
       setTimer1(mountTimer(() => storeTransactions(), 60000))
+      storeTransactions()
       setTimer2(mountTimer(() => getTableItemsFromBrowserStorage(), 10000))
       getTableItemsFromBrowserStorage()
     } else {
