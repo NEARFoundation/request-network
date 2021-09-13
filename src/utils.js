@@ -85,7 +85,7 @@ export async function storeTransactions() {
        COALESCE(a.args::json->>'deposit', '') as deposit,
        COALESCE(a.args::json->>'method_name', '') as method_name,
        COALESCE((a.args::json->'args_json')::json->>'to', '') as "to",
-       COALESCE((a.args::json->'args_json')::json->>'amount', '') as amount,
+       COALESCE(a.args::json->>'deposit', '') as amount,
        COALESCE((a.args::json->'args_json')::json->>'payment_reference', '') as payment_reference
 FROM transactions t,
      receipts r,

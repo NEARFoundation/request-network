@@ -57,7 +57,6 @@ export default function App() {
       await window.contract.transfer_with_reference(
         {
           to: receiver.value,
-          amount: transferAmount,
           payment_reference: calculatePaymentReference(requestId.value, salt.value, receiver.value)
         },
         BOATLOAD_OF_GAS,

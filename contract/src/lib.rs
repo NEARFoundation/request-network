@@ -1,5 +1,6 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{env, near_bindgen, setup_alloc, AccountId, Balance, Promise};
+use near_sdk::{env, near_bindgen, setup_alloc, Balance, Promise};
+use near_sdk::json_types::ValidAccountId;
 
 setup_alloc!();
 
@@ -10,32 +11,19 @@ pub struct RequestProxy {}
 #[near_bindgen]
 impl RequestProxy {
     #[payable]
-    pub fn transfer_with_reference(&mut self, to: AccountId, amount: String,
-                                   payment_reference: String) -> Promise {
-        let balance: u128 = env::attached_deposit();
+    pub fn transfer_with_reference(
+        &mut self,
+        to: ValidAccountId,
+        payment_reference: String
+    ) -> Promise
+    {
+        let amount: u128 = env::attached_deposit();
 
-        assert!(
-            env::is_valid_account_id(to.as_bytes()),
-            "Account @{} is invalid",
-            to
-        );
         let reference_vec: Vec<u8> =
             match hex::decode(payment_reference.replace("0x", "")) {
                 Ok(buffer) => buffer,
                 _ => panic!("Payment reference value error")
             };
-        let amount_u128: u128 =
-            match amount.parse() {
-                Ok(value) => value,
-                _ => panic!("Amount value error")
-            };
-        assert_eq!(
-            amount_u128,
-            balance,
-            "Not enough tokens (Supplied: {}. Demand: {})",
-            amount_u128,
-            balance
-        );
         assert_eq!(
             reference_vec.len(),
             8,
@@ -43,10 +31,10 @@ impl RequestProxy {
         );
 
         env::log(format!("Transferring {} yNEAR (~{} NEAR) to account @{} with reference 0x{}",
-                         amount_u128, yton(amount_u128), to,
+                         amount, yton(amount), to.to_string(),
                          hex::encode(reference_vec)).as_bytes());
-        Promise::new(to)
-            .transfer(amount_u128.clone())
+        Promise::new(to.as_ref().into())
+            .transfer(amount.clone())
             .into()
     }
 }
@@ -58,8 +46,9 @@ pub fn yton(yocto_amount: Balance) -> Balance {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use near_sdk::MockedBlockchain;
+    use near_sdk::{MockedBlockchain, AccountId};
     use near_sdk::{testing_env, VMContext};
+    use std::convert::TryInto;
 
     fn alice_account() -> AccountId { "alice.near".to_string() }
 
@@ -93,71 +82,27 @@ mod tests {
 
     #[test]
     #[should_panic(
-    expected = r#"Not enough tokens (Supplied: 100000000000000000000000000. Demand: 0)"#
-    )]
-    fn transfer_with_not_enough_money() {
-        let context = get_context(alice_account(), 0, false);
-        testing_env!(context);
-        let mut contract = RequestProxy::default();
-        let to = bob_account();
-        let amount = "100000000000000000000000000".to_string();
-        let payment_reference = "0xffffffffffffff00".to_string();
-        contract.transfer_with_reference(to, amount, payment_reference);
-    }
-
-    #[test]
-    #[should_panic(
-    expected = r#"Account @bob*near is invalid"#
-    )]
-    fn transfer_with_invalid_account() {
-        let context = get_context(alice_account(), ntoy(100), false);
-        testing_env!(context);
-        let mut contract = RequestProxy::default();
-        let to = "bob*near".to_string();
-        let amount = "100000000000000000000000000".to_string();
-        let payment_reference = "0xffffffffffffff00".to_string();
-        contract.transfer_with_reference(to, amount, payment_reference);
-    }
-
-    #[test]
-    #[should_panic(
     expected = r#"Incorrect length payment reference"#
     )]
     fn transfer_with_invalid_parameter_length() {
         let context = get_context(alice_account(), ntoy(100), false);
         testing_env!(context);
         let mut contract = RequestProxy::default();
-        let to = bob_account();
-        let amount = "100000000000000000000000000".to_string();
+        let to = bob_account().try_into().unwrap();
         let payment_reference = "0xffffffffffffff".to_string();
-        contract.transfer_with_reference(to, amount, payment_reference);
+        contract.transfer_with_reference(to, payment_reference);
     }
 
     #[test]
     #[should_panic(
     expected = r#"Payment reference value error"#
     )]
-    fn simple_transfer_with_invalid_reference_value() {
+    fn transfer_with_invalid_reference_value() {
         let context = get_context(alice_account(), ntoy(1), false);
         testing_env!(context);
         let mut contract = RequestProxy::default();
-        let to = bob_account();
-        let amount = "1000000000000000000000000".to_string();
+        let to = bob_account().try_into().unwrap();
         let payment_reference = "0x123".to_string();
-        contract.transfer_with_reference(to, amount, payment_reference);
-    }
-
-    #[test]
-    #[should_panic(
-    expected = r#"Amount value error"#
-    )]
-    fn simple_transfer_with_invalid_amount() {
-        let context = get_context(alice_account(), ntoy(1), false);
-        testing_env!(context);
-        let mut contract = RequestProxy::default();
-        let to = bob_account();
-        let amount = "abc".to_string();
-        let payment_reference = "0xffffffffffffff00".to_string();
-        contract.transfer_with_reference(to, amount, payment_reference);
+        contract.transfer_with_reference(to, payment_reference);
     }
 }

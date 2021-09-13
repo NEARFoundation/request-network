@@ -26,7 +26,6 @@ beforeAll(async function () {
 test('check transfer_with_reference', async () => {
   await window.contract.transfer_with_reference({
     to: window.accountId,
-    amount: "200000000000000000000000",
     payment_reference: "0xffffffffffffff00"
   }, window.GAS, "200000000000000000000000")
   expect(true)
@@ -36,7 +35,6 @@ test('check cannot transfer_with_reference', async () => {
   try {
     await window.contract.transfer_with_reference({
       to: window.accountId,
-      amount: "200000000000000000000000",
       payment_reference: "0xffffffffffffff"
     }, window.GAS, "200000000000000000000000")
     expect(false)
