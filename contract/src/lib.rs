@@ -1,6 +1,7 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{env, near_bindgen, setup_alloc, Balance, Promise};
-use near_sdk::json_types::ValidAccountId;
+use near_sdk::{env, near_bindgen, setup_alloc, Promise};
+use near_sdk::serde_json::json;
+use near_sdk::json_types::{ValidAccountId, U128};
 
 setup_alloc!();
 
@@ -19,34 +20,34 @@ impl RequestProxy {
     {
         let amount: u128 = env::attached_deposit();
 
-        let reference_vec: Vec<u8> =
-            match hex::decode(payment_reference.replace("0x", "")) {
-                Ok(buffer) => buffer,
-                _ => panic!("Payment reference value error")
-            };
+        let reference_vec: Vec<u8> = hex::decode(
+            payment_reference.replace("0x", "")
+        ).expect("Payment reference value error");
         assert_eq!(
             reference_vec.len(),
             8,
             "Incorrect length payment reference"
         );
 
-        env::log(format!("Transferring {} yNEAR (~{} NEAR) to account @{} with reference 0x{}",
-                         amount, yton(amount), to.to_string(),
-                         hex::encode(reference_vec)).as_bytes());
+        env::log(&json!({
+            "amount": U128::from(amount),
+            "receiver": to.to_string(),
+            "reference": hex::encode(reference_vec.clone())
+        })
+          .to_string()
+          .into_bytes()
+        );
+
         Promise::new(to.as_ref().into())
             .transfer(amount.clone())
             .into()
     }
 }
 
-pub fn yton(yocto_amount: Balance) -> Balance {
-    (yocto_amount + (5 * 10u128.pow(23))) / 10u128.pow(24)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use near_sdk::{MockedBlockchain, AccountId};
+    use near_sdk::{MockedBlockchain, AccountId, Balance};
     use near_sdk::{testing_env, VMContext};
     use std::convert::TryInto;
 
