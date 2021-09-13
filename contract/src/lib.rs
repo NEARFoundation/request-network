@@ -32,7 +32,7 @@ impl RequestProxy {
         env::log(&json!({
             "amount": U128::from(amount),
             "receiver": to.to_string(),
-            "reference": hex::encode(reference_vec.clone())
+            "reference": hex::encode(reference_vec)
         })
           .to_string()
           .into_bytes()
