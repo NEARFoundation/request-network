@@ -8,7 +8,7 @@ import Big from 'big.js'
 
 import getConfig from './config'
 const { networkId } = getConfig(process.env.NODE_ENV || 'development')
-const BOATLOAD_OF_GAS = Big(3).times(10 ** 13).toFixed();
+const BOATLOAD_OF_GAS = Big(50).times(10 ** 12).toFixed(); // 50 TeraGas
 
 export default function App() {
   const [showErrorMessage, setShowErrorMessage] = React.useState(false)

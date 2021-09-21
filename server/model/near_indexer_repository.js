@@ -7,6 +7,8 @@ const serverConfig = getServerConfig(process.env.NODE_ENV || 'development')
 async function getTransactionsFromNearIndexerDatabase(depth = serverConfig.maxSearchDepthInBlocks,
                                                       limitLines = serverConfig.limitLinesOfResult)
 {
+    // If the 'payer' field is equal to the 'payee' field, it means that the funds are returned to the payer,
+    // because the transfer to account "to" has not been completed. For example, if the account 'to' does not exist
     const query = `SELECT t.transaction_hash,
        b.block_hash,
        t.block_timestamp,
@@ -35,6 +37,17 @@ WHERE t.transaction_hash = r.originated_from_transaction_hash
   AND t.receiver_account_id = $1
   AND b.block_height >=
       (select block_height from blocks order by block_height desc limit 1) - $2
+  AND EXISTS(
+    SELECT 1
+    FROM execution_outcome_receipts eor,
+         action_receipt_actions ara,
+         execution_outcomes eo
+    WHERE eor.executed_receipt_id = t.converted_into_receipt_id
+      AND ara.receipt_id = eor.produced_receipt_id
+      AND eo.receipt_id = eor.produced_receipt_id
+      AND ara.action_kind = 'FUNCTION_CALL'
+      AND COALESCE(ara.args::json->>'method_name', '') = 'on_transfer_with_reference'
+      AND eo.status = 'SUCCESS_VALUE')
 ORDER BY b.block_height DESC
 LIMIT $3`
 

@@ -1,13 +1,38 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{env, near_bindgen, setup_alloc, Promise};
+use near_sdk::{
+    env,
+    assert_self,
+    ext_contract,
+    is_promise_success,
+    near_bindgen,
+    setup_alloc,
+    AccountId,
+    Balance,
+    Gas,
+    Promise
+};
 use near_sdk::serde_json::json;
 use near_sdk::json_types::{ValidAccountId, U128};
 
 setup_alloc!();
 
+const NO_DEPOSIT: Balance = 0;
+const MIN_GAS: Gas = 50_000_000_000_000;
+const CALLBACK: Gas = 25_000_000_000_000;
+
 #[near_bindgen]
 #[derive(Default, BorshDeserialize, BorshSerialize)]
 pub struct RequestProxy {}
+
+#[ext_contract(ext_self)]
+pub trait ExtRequestProxy {
+    fn on_transfer_with_reference(
+        &mut self,
+        account_id: AccountId,
+        amount_sent: U128,
+        predecessor_account_id: AccountId
+    ) -> bool;
+}
 
 #[near_bindgen]
 impl RequestProxy {
@@ -19,6 +44,14 @@ impl RequestProxy {
     ) -> Promise
     {
         let amount: u128 = env::attached_deposit();
+        let serializable_amount = U128::from(amount);
+
+        assert!(
+            MIN_GAS <= env::prepaid_gas(),
+            "Not enough attach Gas to call this method (Supplied: {}. Demand: {})",
+            env::prepaid_gas(),
+            MIN_GAS
+        );
 
         let reference_vec: Vec<u8> = hex::decode(
             payment_reference.replace("0x", "")
@@ -29,18 +62,56 @@ impl RequestProxy {
             "Incorrect length payment reference"
         );
 
+        let receiver_account_id = to.to_string();
         env::log(&json!({
-            "amount": U128::from(amount),
-            "receiver": to.to_string(),
+            "amount": serializable_amount,
+            "receiver": receiver_account_id,
             "reference": hex::encode(reference_vec)
         })
           .to_string()
-          .into_bytes()
+          .into_bytes(),
         );
 
-        Promise::new(to.as_ref().into())
-            .transfer(amount.clone())
-            .into()
+        Promise::new(receiver_account_id.clone())
+          .transfer(amount)
+          .then(ext_self::on_transfer_with_reference(
+              receiver_account_id,
+              serializable_amount,
+              env::predecessor_account_id(),
+              &env::current_account_id(),
+              NO_DEPOSIT,
+              CALLBACK
+          ))
+    }
+
+    pub fn on_transfer_with_reference(
+        &mut self,
+        account_id: AccountId,
+        amount_sent: U128,
+        predecessor_account_id: AccountId
+    ) -> bool {
+        assert_self();
+
+        if is_promise_success() {
+            env::log(
+                format!(
+                    "Transferring {} yNEAR from {} to account {}",
+                    amount_sent.0,
+                    predecessor_account_id,
+                    account_id
+                ).as_bytes(),
+            );
+            true
+        } else {
+            env::log(
+                format!(
+                    "Failed to transfer to account {}. Returning attached deposit of {} to {}",
+                    account_id, amount_sent.0, predecessor_account_id
+                ).as_bytes(),
+            );
+            Promise::new(predecessor_account_id).transfer(amount_sent.0);
+            false
+        }
     }
 }
 
@@ -55,7 +126,11 @@ mod tests {
 
     fn bob_account() -> AccountId { "bob.near".to_string() }
 
-    fn get_context(predecessor_account_id: AccountId, attached_deposit: Balance, is_view: bool
+    fn get_context(
+        predecessor_account_id: AccountId,
+        attached_deposit: Balance,
+        prepaid_gas: Gas,
+        is_view: bool
     ) -> VMContext {
         VMContext {
             current_account_id: predecessor_account_id.clone(),
@@ -70,7 +145,7 @@ mod tests {
             account_locked_balance: 0,
             storage_usage: 10u64.pow(6),
             attached_deposit,
-            prepaid_gas: 10u64.pow(15),
+            prepaid_gas,
             random_seed: vec![0, 1, 2],
             is_view,
             output_data_receivers: vec![],
@@ -86,7 +161,12 @@ mod tests {
     expected = r#"Incorrect length payment reference"#
     )]
     fn transfer_with_invalid_parameter_length() {
-        let context = get_context(alice_account(), ntoy(100), false);
+        let context = get_context(
+            alice_account(),
+            ntoy(100),
+            10u64.pow(14),
+            false
+        );
         testing_env!(context);
         let mut contract = RequestProxy::default();
         let to = bob_account().try_into().unwrap();
@@ -99,11 +179,34 @@ mod tests {
     expected = r#"Payment reference value error"#
     )]
     fn transfer_with_invalid_reference_value() {
-        let context = get_context(alice_account(), ntoy(1), false);
+        let context = get_context(
+            alice_account(),
+            ntoy(1),
+            10u64.pow(14),
+            false
+        );
         testing_env!(context);
         let mut contract = RequestProxy::default();
         let to = bob_account().try_into().unwrap();
         let payment_reference = "0x123".to_string();
+        contract.transfer_with_reference(to, payment_reference);
+    }
+
+    #[test]
+    #[should_panic(
+    expected = r#"Not enough attach Gas to call this method"#
+    )]
+    fn transfer_with_not_enough_gas() {
+        let context = get_context(
+            alice_account(),
+            ntoy(1),
+            10u64.pow(13),
+            false
+        );
+        testing_env!(context);
+        let mut contract = RequestProxy::default();
+        let to = bob_account().try_into().unwrap();
+        let payment_reference = "0xffffffffffffffff".to_string();
         contract.transfer_with_reference(to, payment_reference);
     }
 }
