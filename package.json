@@ -68,7 +68,8 @@
           "<rootDir>/src/tests/ui.test.js"
         ]
       }
-    ]
+    ],
+    "testTimeout" : 30000
   },
   "browserslist": {
     "production": [
