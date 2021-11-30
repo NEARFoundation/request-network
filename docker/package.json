@@ -3,18 +3,10 @@
   "version": "1.0.0",
   "description": "Test gateway between NEAR and Request-network",
   "dependencies": {
-    "express": "^4.17.1",
-    "cors": "^2.8.5",
-    "pg": "^8.6.0",
-    "node-cron": "^3.0.0",
-    "dotenv": "^10.0.0"
-  },
-  "devDependencies": {
-    "concurrently": "^6.2.0"
+    "express": "^4.17.1"
   },
   "scripts": {
-    "start": "concurrently \"npm run frontend\" \"npm run server\" ",
-    "frontend": "node ./frontend.js",
-    "server": "node ./server.js"
+    "start": "npm run frontend",
+    "frontend": "node ./frontend.js"
   }
 }

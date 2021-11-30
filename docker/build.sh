@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build  -t request-network:0.1.0 . < Dockerfile
+docker build  -t request-network:0.2.0 . < Dockerfile

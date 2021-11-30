@@ -8,7 +8,7 @@
     "build:web": "rm -rf dist && parcel build src/index.html --public-url ./",
     "dev:deploy:contract": "near dev-deploy",
     "deploy:contract": "near deploy",
-    "start:server": "(cd server && yarn start)",
+    "start:server": "(cd server/near_indexer_data_collector && yarn start)",
     "prestart": "yarn build:contract && yarn dev:deploy:contract",
     "start": "echo The app is starting! It will automatically open in your browser when ready && env-cmd -f ./neardev/dev-account.env parcel src/index.html --open",
     "start:no-contract": "env-cmd -f ./neardev/dev-account.env parcel src/index.html",
@@ -40,8 +40,7 @@
     "near-api-js": "~0.41.0",
     "react": "~17.0.1",
     "react-dom": "~17.0.1",
-    "regenerator-runtime": "~0.13.5",
-    "autobahn-browser": "^20.9.2"
+    "regenerator-runtime": "~0.13.5"
   },
   "resolutions": {
     "@babel/preset-env": "7.13.8"
@@ -69,7 +68,7 @@
         ]
       }
     ],
-    "testTimeout" : 30000
+    "testTimeout": 30000
   },
   "browserslist": {
     "production": [

@@ -5,8 +5,6 @@ WORKDIR /usr/src/request-network
 
 COPY frontend.js /usr/src/request-network/
 COPY package.json /usr/src/request-network/
-COPY .env /usr/src/request-network/
-COPY modules/server.js /usr/src/request-network/
 COPY modules/favicon.*.ico /usr/src/request-network/app/
 COPY modules/global.*.css /usr/src/request-network/app/
 COPY modules/global.*.map /usr/src/request-network/app/
@@ -17,6 +15,5 @@ COPY modules/src.*.map /usr/src/request-network/app/
 RUN npm install
 
 EXPOSE 8080
-EXPOSE 8081
 
 CMD ["npm", "start"]

@@ -1,12 +1,6 @@
 import React from 'react'
 import Big from 'big.js'
-import {
-  getTransactionsFromIndexer,
-  getIndexerTransactionsFromBrowserStorage,
-  setStateNotInitializedTransactionStore,
-  hasInitializedTransactionStore,
-  storeTransactions
-} from '../utils'
+import { getTransactionsFromIndexer } from '../utils'
 
 import OneTransaction from '../components/OneTransaction'
 import Message from '../components/Message'
@@ -18,13 +12,10 @@ export default function Transactions({onBack}) {
   const [showOneTransaction, setShowOneTransaction] = React.useState(false)
   const [showEmptyContentWarn, setShowEmptyContentWarn] = React.useState(true)
   const [oneTransaction, setOneTransaction] = React.useState({})
-  const [sourceMode, setSourceMode] = React.useState(1)
   const [timer1, setTimer1] = React.useState(0)
-  const [timer2, setTimer2] = React.useState(0)
-  const [timer3, setTimer3] = React.useState(0)
 
   const clickOnBack = () => {
-    stopAllTimers()
+    unmountTimer(timer1)
     onBack()
   }
 
@@ -40,11 +31,6 @@ export default function Transactions({onBack}) {
       sendErrorMessage(e.message)
     }
     setShowEmptyContentWarn(false)
-  }
-
-  const getTableItemsFromBrowserStorage = () => {
-    setTableItems(getIndexerTransactionsFromBrowserStorage())
-    setShowEmptyContentWarn(!hasInitializedTransactionStore())
   }
 
   const sendErrorMessage = (message) => {
@@ -76,11 +62,6 @@ export default function Transactions({onBack}) {
     setShowOneTransaction(false)
   }
 
-  const handleRadioButton = (value) => {
-    setSourceMode(value)
-    switchSource(value)
-  }
-
   const mountTimer = (handler, timeout) => {
     return setInterval(handler, timeout)
   }
@@ -91,33 +72,12 @@ export default function Transactions({onBack}) {
     }
   }
 
-  const stopAllTimers = () => {
-    unmountTimer(timer1)
-    unmountTimer(timer2)
-    unmountTimer(timer3)
-  }
-
-  const switchSource = (mode) => {
-    stopAllTimers()
-    setShowEmptyContentWarn(true)
-    setTableItems([])
-    if (mode === 1) {
-      setTimer1(mountTimer(() => storeTransactions(), 60000))
-      storeTransactions()
-      setTimer2(mountTimer(() => getTableItemsFromBrowserStorage(), 10000))
-      getTableItemsFromBrowserStorage()
-    } else {
-      setTimer3(mountTimer(() => getTableItemsFromUtilityServer(), 10000))
-      getTableItemsFromUtilityServer()
-    }
-  }
-
   React.useEffect(
     () => {
-      setStateNotInitializedTransactionStore();
-      switchSource(sourceMode)
+      setTimer1(mountTimer(() => getTableItemsFromUtilityServer(), 10000))
+      getTableItemsFromUtilityServer()
       return () => {
-        stopAllTimers()
+        unmountTimer(timer1)
       }
     }, []
   )
@@ -141,13 +101,7 @@ export default function Transactions({onBack}) {
       <button onClick={clickOnBack} hidden={showOneTransaction}>Back to Home</button>
       {!showOneTransaction ?
         <>
-          <p className="selectSource">
-            Select a data source:
-            <input id="source1" type="radio" checked={sourceMode === 1} onChange={() => handleRadioButton(1)} />
-            <label htmlFor="source1">NEAR indexer via WebSocket</label>
-            <input id="source2" type="radio" checked={sourceMode === 2} onChange={() => handleRadioButton(2)} />
-            <label htmlFor="source2">Utility Server</label>
-          </p>
+          <p/>
           <div>
             <table className="transactions">
               <thead>
