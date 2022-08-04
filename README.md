@@ -3,7 +3,6 @@ Request-network
 
 This example demonstrates payments using NEAR tokens and viewing the transaction log with a RequestProxy smart contract deployed in NEAR.
 
-Demo: https://nicepay.beskyd.com:8080/
 
 Quick Start
 ===========
